@@ -1,0 +1,26 @@
+@charset "utf-8";
+.run {
+    clear: both;
+    display: block;
+    padding: 1em;
+    background-color: #79BD9A;
+    text-decoration: none;
+    color: white;
+    width: 100px;
+    text-align: center;
+}
+
+.debug {
+    clear: both;
+    width: 200px;
+    padding: 0;
+    margin: 0;
+}
+
+.debug > li {
+    list-style: none;
+}
+
+.float_right{
+    float: right;
+}

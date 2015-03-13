@@ -1,48 +1,60 @@
 ui =
-  el: {}
+  el:
+    editor: '.editor'
+    run: '.run'
+    result: '.result'
+    debug:
+      status: '.debug .status'
+      ip: '.debug .ip'
+      option: '.debug input[name="isDebug"]'
+
   interpreter: null
+
   init: ()->
     @interpreter = new BrainfuckInterpreter()
-    @interpreter.setOutFn @appendOutput.bind(@)
+    @interpreter.outFn = @appendOutput.bind(@)
     @buildElement()
 
   buildElement: ()->
-    @el = new DOMBuilder ({
-      el:
-        editor: 'textarea'
-        run: 'button'
-        debug:
-          view:
-            _panel: 'table'
-            row1:
-              _panel: 'tr'
-              cell1:
-                _panel: 'td'
-                ip: 'span'
-                character: 'span'
-          optionLabel:
-            _panel: 'label'
-            option: 'input'
-        result: 'div'
-    })
+    @el = DOMGrab.grab(@el)
+    @el.run.addEventListener 'click', @doRun.bind(@)
 
-    @el.run.innerText = 'Run'
-    @el.run.addEventListener 'click', @doRun.bind @
-
-    @el.debug.option.type = 'checkbox'
-    @el.debug.option.checked = true
-    @el.debug.optionLabel.innerText = 'Debug'
 
   doRun: () ->
     @el.result.innerText = ''
-    @interpreter.writeCode @el.editor.value
-    @doStepByStep()
+    @interpreter.reset()
+
+    try
+      !@interpreter.writeCode @el.editor.value
+    catch ex
+      alert("Fail to write code.")
+      return false
+    finally
+      @updateStatus()
+
+    if !@interpreter.launch()
+      @updateStatus()
+      alert(@interpreter.getException())
+      return false
+
+    if @el.debug.option.checked
+      @doStepByStep()
+    else
+      @interpreter.run()
+      @updateStatus()
+
+    false
+  updateStatus: ()->
+    @el.debug.status.innerText = @interpreter.getStatus()
+    @el.debug.ip.innerText = @interpreter.getInstructionPointer()
+
   doStepByStep: () ->
     if @interpreter.step()
       setTimeout (@doStepByStep.bind @), 0
-#@el.debug.innerText
+    @updateStatus()
 
-  appendOutput: (text) ->
-    @el.result.innerText += text
+  appendOutput: (itp, data_array) ->
+    @el.result.innerText += String.fromCharCode(e) for e in data_array
+    true
 
 window.addEventListener 'load', ()-> ui.init();
